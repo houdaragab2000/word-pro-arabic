@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Pro Arabic</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#e9edf4;color:#222;
+ font-family:Arial,Tahoma,sans-serif
+}
+.top{
+ background:#185abd;color:white;padding:15px;
+ font-size:21px;font-weight:bold
+}
+.menu{
+ background:white;padding:10px;display:flex;
+ gap:8px;flex-wrap:wrap;position:sticky;top:0;
+ box-shadow:0 2px 5px #aaa;z-index:2
+}
+button,select,input{
+ padding:9px;border:1px solid #ccd2dd;
+ border-radius:5px;background:white;font-size:14px
+}
+button:active{background:#dce8ff}
+.home{padding:20px;text-align:center}
+.primary{
+ background:#185abd;color:white;border:0;
+ padding:15px;width:100%;font-size:18px
+}
+#editorArea{display:none;padding:15px 8px}
+.sheet{
+ background:white;width:100%;max-width:794px;
+ min-height:1000px;margin:auto;padding:45px 35px;
+ box-shadow:0 2px 12px #bbb
+}
+#title{
+ width:100%;border:0;border-bottom:1px solid #ddd;
+ border-radius:0;font-size:21px;margin-bottom:20px
+}
+#paper{
+ min-height:850px;outline:none;line-height:1.9;
+ font-size:16px;overflow-wrap:anywhere
+}
+#paper img{max-width:100%;height:auto}
+#saved{padding:12px}
+.item{
+ background:white;margin:8px 0;padding:12px;
+ border-radius:8px
+}
+@media print{
+ .top,.menu,.home,#saved,#title{display:none!important}
+ #editorArea{display:block!important;padding:0}
+ .sheet{box-shadow:none;padding:0;max-width:none}
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">Word Pro Arabic</div>
+
+<div class="menu" id="toolbar" style="display:none">
+ <button onclick="cmd('bold')"><b>B</b></button>
+ <button onclick="cmd('italic')"><i>I</i></button>
+ <button onclick="cmd('underline')"><u>U</u></button>
+
+ <select onchange="fontSize(this.value);this.value=''">
+  <option value="">حجم الخط</option>
+  <option value="2">12</option>
+  <option value="3">16</option>
+  <option value="4">18</option>
+  <option value="5">24</option>
+  <option value="6">32</option>
+ </select>
+
+ <select onchange="fontName(this.value);this.value=''">
+  <option value="">نوع الخط</option>
+  <option value="Arial">Arial</option>
+  <option value="Tahoma">Tahoma</option>
+  <option value="Georgia">Georgia</option>
+ </select>
+
+ <input type="color" title="لون الخط"
+ onchange="textColor(this.value)">
+
+ <button onclick="cmd('justifyRight')">يمين</button>
+ <button onclick="cmd('justifyCenter')">وسط</button>
+ <button onclick="cmd('justifyLeft')">يسار</button>
+ <button onclick="addTable()">جدول</button>
+ <button onclick="document.getElementById('pic').click()">صورة</button>
+ <button onclick="saveDoc()">حفظ</button>
+ <button onclick="window.print()">PDF / طباعة</button>
+ <button onclick="goHome()">الرئيسية</button>
+</div>
+
+<div class="home" id="home">
+ <h2>مساحة عملك للكتابة والتصميم</h2>
+ <button class="primary" onclick="newDoc()">＋ إنشاء مستند جديد</button>
+ <h3>مستنداتي</h3>
+ <div id="saved"></div>
+</div>
+
+<div id="editorArea">
+ <div class="sheet">
+  <input id="title" placeholder="عنوان المستند">
+  <div id="paper" contenteditable="true"
+  dir="rtl" spellcheck="true"></div>
+ </div>
+</div>
+
+<input id="pic" type="file" accept="image/*"
+hidden onchange="insertPic(event)">
+
+<script>
+let docs=[];
+try{
+ docs=JSON.parse(localStorage.getItem('wpa_docs')||'[]');
+}catch(e){docs=[]}
+
+function newDoc(){
+ document.getElementById('home').style.display='none';
+ document.getElementById('editorArea').style.display='block';
+ document.getElementById('toolbar').style.display='flex';
+ document.getElementById('title').value='مستند جديد';
+ document.getElementById('paper').innerHTML='';
+ document.getElementById('paper').focus();
+}
+
+function goHome(){
+ document.getElementById('home').style.display='block';
+ document.getElementById('editorArea').style.display='none';
+ document.getElementById('toolbar').style.display='none';
+ render();
+}
+
+function cmd(c){
+ document.getElementById('paper').focus();
+ document.execCommand(c,false,null);
+}
+
+function fontSize(s){
+ if(!s)return;
+ document.getElementById('paper').focus();
+ document.execCommand('fontSize',false,s);
+}
+
+function fontName(name){
+ if(!name)return;
+ document.getElementById('paper').focus();
+ document.execCommand('fontName',false,name);
+}
+
+function textColor(color){
+ document.getElementById('paper').focus();
+ document.execCommand('foreColor',false,color);
+}
+
+function addTable(){
+ let rows=prompt('عدد الصفوف؟','3');
+ let cols=prompt('عدد الأعمدة؟','3');
+ rows=Number(rows);cols=Number(cols);
+ if(!Number.isInteger(rows)||!Number.isInteger(cols)||
+ rows<1||cols<1||rows>20||cols>10)return;
+
+ let t=document.createElement('table');
+ t.border='1';
+ t.style.cssText='border-collapse:collapse;width:100%;margin:12px 0';
+ for(let r=0;r<rows;r++){
+  let tr=t.insertRow();
+  for(let c=0;c<cols;c++){
+   let td=tr.insertCell();
+   td.style.padding='7px';
+   td.textContent=' ';
+  }
+ }
+ document.getElementById('paper').focus();
+ let sel=window.getSelection();
+ if(sel.rangeCount){
+  let range=sel.getRangeAt(0);
+  range.deleteContents();
+  range.insertNode(t);
+ }else{
+  document.getElementById('paper').appendChild(t);
+ }
+}
+
+function insertPic(e){
+ let file=e.target.files[0];
+ if(!file)return;
+ let reader=new FileReader();
+ reader.onload=function(){
+  let img=document.createElement('img');
+  img.src=reader.result;
+  img.alt='صورة';
+  document.getElementById('paper').appendChild(img);
+ };
+ reader.readAsDataURL(file);
+ e.target.value='';
+}
+
+function saveDoc(){
+ let title=document.getElementById('title').value.trim()||'مستند بدون عنوان';
+ let paper=document.getElementById('paper').innerHTML;
+ let id=window.currentDocId;
+
+ if(id){
+  let old=docs.findIndex(d=>d.id===id);
+  if(old>=0)docs.splice(old,1);
+ }
+
+ id=Date.now();
+ window.currentDocId=id;
+ docs.unshift({id,title,paper});
+ try{
+  localStorage.setItem('wpa_docs',JSON.stringify(docs));
+  alert('تم حفظ المستند');
+  render();
+ }catch(e){
+  alert('تعذر الحفظ. قد تكون مساحة التخزين غير كافية.');
+ }
+}
+
+function openDoc(id){
+ let d=docs.find(x=>x.id===id);
+ if(!d)return;
+ newDoc();
+ window.currentDocId=id;
+ document.getElementById('title').value=d.title;
+ document.getElementById('paper').innerHTML=d.paper;
+}
+
+function render(){
+ let box=document.getElementById('saved');
+ box.replaceChildren();
+ docs.forEach(d=>{
+  let item=document.createElement('div');
+  item.className='item';
+  let name=document.createElement('b');
+  name.textContent=d.title;
+  let open=document.createElement('button');
+  open.textContent='فتح';
+  open.onclick=()=>openDoc(d.id);
+  item.append(name,document.createTextNode(' '),open);
+  box.appendChild(item);
+ });
+}
+render();
+</script>
+</body>
+</html>
