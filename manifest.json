@@ -1,0 +1,14 @@
+{
+  "id": "/word-pro-arabic/",
+  "name": "Word Pro Arabic",
+  "short_name": "Word Pro",
+  "description": "تطبيق عربي لكتابة المستندات وتنسيقها وحفظها",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/word-pro-arabic/",
+  "scope": "/word-pro-arabic/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
